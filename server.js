@@ -3,12 +3,13 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 var knex = require('knex')
-const morgan= require('morgan'); 
+const morgan= require('morgan');
 
 const register = require('./controllers/register');
 const signin = require('./controllers/signin');
 const profile=require('./controllers/profile');
-const image=require('./controllers/image')
+const image=require('./controllers/image');
+const auth=require('./controllers/authorization');
 
 const db=knex({
     client: 'pg',
@@ -39,24 +40,24 @@ app.use(morgan('combined') )
 app.use(cors());
 
 
-app.get('/', (req, res) => {
-    res.json('Hola ')
-    // db.select('*').from('users').then(user=>res.json(user))
-})
+// app.get('/', (req, res) => {
+//     res.json('Hola ')
+//     // db.select('*').from('users').then(user=>res.json(user))
+// })
 
-app.post('/signin', signin.handleSignin(db,bcrypt))
+app.post('/signin', signin.signinAuthentication(db,bcrypt))
 //Los mismo que por funciones vanzadas
 //app.post('/signin', (req,res)=>{signin.handleSignin(req,res,db,bcrypt)})
 
 app.post('/register',(req,res)=> {register.handleRegister(req,res,db,bcrypt)})
 
-app.get('/profile/:id',(req,res)=>{profile.handleProfile(req,res,db)} )
+app.get('/profile/:id',auth.requiereAuth,(req,res)=>{profile.handleProfile(req,res,db)} )
 
-app.post('/profile/:id',(req,res)=>{profile.handleProfileUpdate(req,res,db)})
+app.post('/profile/:id',auth.requiereAuth,(req,res)=>{profile.handleProfileUpdate(req,res,db)})
 
-app.put('/image', (req,res)=>{image.handleImage(req,res,db)})
+app.put('/image',auth.requiereAuth, (req,res)=>{image.handleImage(req,res,db)})
 
-app.post('/imageurl', (req,res)=>{image.handleAPICall(req,res)})
+app.post('/imageurl',auth.requiereAuth, (req,res)=>{image.handleAPICall(req,res)})
 
 
 
